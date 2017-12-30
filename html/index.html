@@ -171,7 +171,7 @@ const tick = (delta) => {
     draw.image($glass1, $glass1.width, 0)
     for (const character of Object.values(characters)) {
         console.log(character)
-        draw.text(character.name, character.x, character.y, '#00ffff')
+        draw.text(character.name, character.x, character.y, 18, '#00ffff')
         draw.image($player1, character.x, character.y)
     }
 
