@@ -12,8 +12,9 @@ queueConnection.on('error', function(e) {
 })
 
 const contexts = {}
-const dispatch = (id, msg, res) => {
-    console.log(`Dispatch all things in there. Now, message is [${JSON.stringify(msg)}]`)
+const dispatch = (user, msg, res) => {
+    const id = user.id
+    console.log(`User=[${JSON.stringify(user)}], Message=[${JSON.stringify(msg)}]`)
     if (msg.action === 'name') {
         console.log(`Update user[${id}]'s name to [${msg.value}]`)
         db.query(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify({name: msg.value})])
@@ -22,7 +23,7 @@ const dispatch = (id, msg, res) => {
     } else if (msg.action === 'chat') {
         console.log(`User[${id}] sends a chat message[${msg.value}]`)
         for (const ctx of Object.values(contexts)) {
-            ctx.postbox.push({ id: id, text: msg.value })
+            ctx.postbox.push({ id: id, name: user.name, text: msg.value })
         }
         res({status: 'ok'})
 
@@ -57,10 +58,13 @@ queueConnection.on('ready', () => {
             console.log(`Q[${queueId}] is registered to global map and will be subscribed soon.`)
             queue.subscribe(input => {
                 console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
-                dispatch(queueId, input, (output) => {
-                    const responseMessage = Object.assign({_: input._}, output)
-                    pullExchange.publish('response', responseMessage)
-                    console.log(`Input=[${JSON.stringify(input)}] and Output=[${JSON.stringify(output)}] via Q[${queueId}].`)
+                db.queryOne(`SELECT * FROM user WHERE user_id = ?`, [queueId]).then(user => {
+                    console.log(`Fetch user[${user}] with queueId[${queueId}].`)
+                    dispatch(user, input, (output) => {
+                        const responseMessage = Object.assign({_: input._}, output)
+                        pullExchange.publish('response', responseMessage)
+                        console.log(`Input=[${JSON.stringify(input)}] and Output=[${JSON.stringify(output)}] via Q[${queueId}].`)
+                    })
                 })
             })
         })
