@@ -24,6 +24,32 @@ queueConnection.on('ready', () => {
         queue.bind('pull', 'response')
         console.log('Response Q and pull xchg is initialize successfully.')
     })
+
+    const spawnQueue = (queueId) => {
+        console.log(`Spawn a Q[${queueId}] and initialize it.`)
+        queueConnection.queue(queueId, (queue) => {
+            queue.bind('post', queueId)
+            queues[queueId] = queue
+            console.log(`Q[${queueId}] is registered to global map and will be subscribed soon.`)
+            queue.subscribe(input => {
+                console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
+                dispatch(input, (output) => {
+                    const responseMessage = Object.assign({_: input._}, output)
+                    pullExchange.publish('response', responseMessage)
+                    console.log(`Input=[${JSON.stringify(input)}] and Output=[${JSON.stringify(output)}] via Q[${queueId}].`)
+                })
+            })
+        })
+    }
+    const despawnQueue = (queueId) => {
+        console.log(`Despawn a Q[${queueId}] and destroy it.`)
+        const queueToDestroy = queues[workMessage.id]
+        if (queueToDestroy) {
+            delete queues[workMessage.id]
+            queueToDestroy.destroy()
+        }
+    }
+
     let notifyExchange = queueConnection.exchange('notify')
     queueConnection.queue('work', (workQueue) => {
         workQueue.bind('notify', 'work')
@@ -31,31 +57,19 @@ queueConnection.on('ready', () => {
         workQueue.subscribe(workMessage => {
             console.log(`Receive message[${JSON.stringify(workMessage)}] from work queue via notify xchg.`)
             if (workMessage.action === 'spawn') {
-                const queueId = workMessage.id
-                console.log(`Spawn a Q[${queueId}] and initialize it.`)
-                queueConnection.queue(queueId, (queue) => {
-                    queue.bind('post', queueId)
-                    queues[queueId] = queue
-                    console.log(`Q[${queueId}] is registered to global map and will be subscribed soon.`)
-                    queue.subscribe(input => {
-                        console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
-                        dispatch(input, (output) => {
-                            const responseMessage = Object.assign({_: input._}, output)
-                            pullExchange.publish('response', responseMessage)
-                            console.log(`Input=[${JSON.stringify(input)}] and Output=[${JSON.stringify(output)}] via Q[${queueId}].`)
-                        })
-                    })
-                })
+                spawnQueue(workMessage.id)
 
             } else if (workMessage.action === 'despawn') {
-                console.log(`Despawn a Q[${queueId}] and destroy it.`)
-                const queueToDestroy = queues[workMessage.id]
-                if (queueToDestroy) {
-                    delete queues[workMessage.id]
-                    queueToDestroy.destroy()
-                }
+                despawnQueue(workMessage.id)
             }
         })
+    })
+
+    console.log(`Read Q list from mysql.`)
+    db.query(`SELECT queue_id FROM queue`).then(ids => {
+        for (const queueId of ids) {
+            spawnQueue(queueId)
+        }
     })
     console.log('All about queues are ready.')
 })

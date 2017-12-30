@@ -82,6 +82,10 @@ app.post('/', (req, res) => {
                 const workMessage = {action: 'spawn', id: queueId}
                 notifyExchange.publish('work', workMessage)
                 console.log(`Notify the fact[${JSON.stringify(workMessage)}] to other workers.`)
+
+                db.query(`REPLACE INTO queue (queue_id) VALUES (?)`, [queueId]).then(dbr => {
+                    console.log(`Register Q[${queueId}] into mysql.`)
+                })
             })
             res.json({status: 'ok'})
         }
