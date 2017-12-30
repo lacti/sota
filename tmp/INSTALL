@@ -1,0 +1,81 @@
+
+curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
+apt update
+apt install dotnet-sdk-2.0.2
+
+add-apt-repository ppa:gophers/archive
+add-apt-repository ppa:git-core/ppa
+apt update
+
+apt install git golang-1.9-go
+echo "export PATH=\$PATH:/usr/lib/go-1.9/bin" >> ~/.profile
+
+curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
+
+apt install nginx mysql-server nodejs build-essential vim
+
+wget https://packages.erlang-solutions.com/erlang/esl-erlang/FLAVOUR_1_general/esl-erlang_20.1.7-1~ubuntu~xenial_amd64.deb
+wget https://dl.bintray.com/rabbitmq/all/rabbitmq-server/3.7.2/rabbitmq-server_3.7.2-1_all.deb
+dpkg -i esl-erlang_20.1.7-1~ubuntu~xenial_amd64.deb
+apt install -f
+dpkg -i rabbitmq-server_3.7.2-1_all.deb
+apt install -f
+
+rabbitmq-plugins list
+rabbitmq-plugins enable rabbitmq_management
+
+rabbitmqctl add_user lacti fpahsk
+rabbitmqctl set_user_tags lacti administrator
+rabbitmqctl set_permissions -p / lacti ".*" ".*" ".*"
+
+vi /etc/mysql/mysql.conf.d/mysqld.cnf
+service mysql restart
+
+cd /tmp
+wget http://download.redis.io/releases/redis-4.0.6.tar.gz
+tar xf redis-4.0.6.tar.gz
+cd redis-4.0.6/
+make distclean
+make
+
+apt install tcl8.6
+make test
+make install
+
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+sysctl vm.overcommit_memory=1
+sysctl -w net.core.somaxconn=16384
+vi /etc/sysctl.conf
+mkdir /etc/redis
+cp redis.conf /etc/redis/
+vi /etc/redis/redis.conf
+/usr/local/bin/redis-server
+
+cd /var/www/
+rm -rf html
+ln -s /home/ubuntu/sota/html html
+
+cd /etc/nginx/
+rm -f nginx.conf site-availables/default
+ln -s /home/ubuntu/sota/nginx/nginx.conf nginx.conf
+ln -s /home/ubuntu/sota/nginx/sites-available/default default
+/usr/sbin/nginx -s reload
+
+add-apt-repository ppa:certbot/certbot
+apt update
+apt upgrade
+apt install python-certbot-nginx
+
+ufw status
+ufw allow 'Nginx Full'
+ufw delete allow 'Nginx HTTP'
+ufw status
+
+certbot --nginx -d DOMAIN
+certbot renew --dry-run
+cat /etc/nginx/sites-available/default
+/usr/sbin/nginx -s reload
+
+./create_db.sh sota PASSWORD
