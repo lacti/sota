@@ -17,21 +17,50 @@ html, body {
 
 
 <script type="text/javascript">
+const guid = () => {
+  const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4()
+}
+const id = localStorage && localStorage.getItem('sota_id') 
+    ? localStorage.getItem('sota_id')
+    : guid()
+const name = localStorage && localStorage.getItem('sota_name')
+    ? localStorage.getItem('sota_name')
+    : (() => {
+        while (true) {
+            const name = prompt('What is your name?')
+            if (name && name.trim()) {
+                return name
+            }
+        }
+    })()
+
+localStorage.setItem('sota_id', id)
+localStorage.setItem('sota_name', name)
+
 const elements = []
 const texts = []
+const postQ = []
+
+const act = msg => fetch('/q/', {
+        method: 'POST',
+        body: JSON.stringify(Object.assign({uid: id}, msg)),
+        headers: {'Content-Type': 'application/json'}
+    }).then(r => r.json())
 
 const $window = window
 const $command = document.getElementById('command')
 const $screen = document.getElementById('screen')
 $command.focus()
 $command.addEventListener('keypress', e => {
-    const text = $command.value
-    if ('Enter' === e.key && text !== '') {
-        texts.push({
-            alive: 0,
-            value: $command.value
+    const text = ($command.value || '')
+    if ('Enter' === e.key && text.trim()) {
+        act({
+            action: 'chat',
+            value: text.trim()
         })
         $command.value = ''
+        $command.focus()
     }
 })
 
@@ -54,6 +83,18 @@ const draw = {
         $ctx.fillText(text, x, y + size)        
     }
 }
+
+const poll = () => {
+    act({
+        action: 'poll'
+    }).then(resp => {
+        for (const msg of resp.messages) {
+            console.log(msg)
+        }
+        poll()
+    })
+}
+poll()
 
 const tick = (delta) => {
     draw.rect(0, 0, $screen.width, $screen.height, '#888888')
