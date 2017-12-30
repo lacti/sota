@@ -17,8 +17,17 @@ const dispatch = (user, msg, res) => {
     console.log(`User=[${JSON.stringify(user)}], Message=[${JSON.stringify(msg)}]`)
     if (msg.action === 'name') {
         console.log(`Update user[${id}]'s name to [${msg.value}]`)
-        db.query(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify({name: msg.value})])
+        const character = {
+            name: msg.value,
+            x: int(Math.random() * 100),
+            y: int(Math.random() * 100),
+        }
+        db.query(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify(character)])
             .then(dbr => res({status: 'ok'}))
+
+        for (const ctx of Object.values(contexts)) {
+            ctx.postbox.push(Object.assign({id: id, type: 'char'}, character))
+        }
 
     } else if (msg.action === 'chat') {
         console.log(`User[${id}] sends a chat message[${msg.value}]`)
@@ -26,6 +35,29 @@ const dispatch = (user, msg, res) => {
             ctx.postbox.push({ id: id, type: 'chat', name: user.name, value: msg.value })
         }
         res({status: 'ok'})
+
+    } else if (msg.action === 'move') {
+        const character = user && user.x
+            ? user
+            : {
+                name: msg.value,
+                x: int(Math.random() * 100),
+                y: int(Math.random() * 100),
+            }
+        if ('up' === msg.value) {
+            character.y -= 4
+        } else if ('down' === msg.value) {
+            character.y += 4
+        } else if ('left' === msg.value) {
+            character.x -= 4
+        } else if ('right' === msg.value) {
+            character.x += 4
+        }
+        db.query(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify(character)])
+            .then(dbr => res({status: 'ok'}))
+        for (const ctx of Object.values(contexts)) {
+            ctx.postbox.push(Object.assign({id: id, type: 'char'}, character))
+        }
 
     } else if (msg.action === 'poll') {
         const postbox = contexts[id].postbox

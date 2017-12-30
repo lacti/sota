@@ -14,6 +14,8 @@ html, body {
 <body>
     <canvas id="screen"></canvas>
     <input id="command" type="text" />
+    <img id="glass1" src="img/glass1.png" style="display: hidden" />
+    <img id="glass2" src="img/glass2.png" style="display: hidden" />
 
 
 <script type="text/javascript">
@@ -42,25 +44,67 @@ const elements = []
 const texts = []
 const postQ = []
 
-const act = msg => fetch('/q/', {
-        method: 'POST',
-        body: JSON.stringify(Object.assign({uid: id}, msg)),
-        headers: {'Content-Type': 'application/json'}
-    }).then(r => r.json())
+const act = msg => {
+    try {
+        return fetch('/q/', {
+            method: 'POST',
+            body: JSON.stringify(Object.assign({uid: id}, msg)),
+            headers: {'Content-Type': 'application/json'}
+        }).then(r => r.json())
+
+    } catch (e) {
+        console.log('Error occurred while communicating with server: ' + e)
+        return new Promise((resolve, reject) => {
+            setTimeout(() => resolve(act(msg)), 1000)
+        })
+    }
+}
 
 const $window = window
 const $command = document.getElementById('command')
 const $screen = document.getElementById('screen')
 $command.focus()
 $command.addEventListener('keypress', e => {
-    const text = ($command.value || '')
-    if ('Enter' === e.key && text.trim()) {
+    const text = ($command.value || '').trim()
+    if ('Enter' === e.key && text) {
+        if ('@reset' === text) {
+            localStorage.removeItem('sota_id')
+            localStorage.removeItem('sota_name')
+            location.reload()
+        } else {
+            act({
+                action: 'chat',
+                value: text
+            })
+            $command.value = ''
+            $command.focus()
+        }
+    }
+})
+$command.addEventListener('keydown', e => {
+    if ('ArrowDown' === e.key) {
         act({
-            action: 'chat',
-            value: text.trim()
+            action: 'move',
+            value: 'down'
         })
-        $command.value = ''
-        $command.focus()
+
+    } else if ('ArrowUp' === e.key) {
+        act({
+            action: 'move',
+            value: 'up'
+        })
+        
+    } else if ('ArrowLeft' === e.key) {
+        act({
+            action: 'move',
+            value: 'left'
+        })
+        
+    } else if ('ArrowRight' === e.key) {
+        act({
+            action: 'move',
+            value: 'right'
+        })
     }
 })
 
@@ -81,6 +125,9 @@ const draw = {
         $ctx.font = size + 'px Serif'
         $ctx.fillStyle = color
         $ctx.fillText(text, x, y + size)
+    },
+    image: ($img, x, y) => {
+        $ctx.drawImage($img, 0, 0, $img.width, $img.height, x, y, $img.width, $img.height)
     }
 }
 
@@ -99,6 +146,13 @@ const poll = () => {
                     value: `[${msg.name}] ${msg.value}`
                 })
             }
+            else if (msg.type === 'char') {
+                elements.push({
+                    x: msg.x,
+                    y: msg.y,
+                    name: msg.name
+                })
+            }
         }
         setTimeout(poll, 100)
     })
@@ -109,9 +163,16 @@ const poll = () => {
         .then(_ => poll())
 })()
 
+const $glass1 = document.getElementById('glass1')
+const $glass2 = document.getElementById('glass2')
+const $player1 = document.getElementById('player1')
 const tick = (delta) => {
     draw.rect(0, 0, $screen.width, $screen.height, '#888888')
+    draw.image($glass1, 0, 0)
+    draw.image($glass1, $glass1.width, 0)
     for (const element of elements) {
+        draw.text(element.name, element.x, element.y, '#00ffff')
+        draw.image($player1, element.x, element.y)
     }
 
     let textY = 0
