@@ -23,11 +23,11 @@ const guid = () => {
   const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4()
 }
-const id = localStorage && localStorage.getItem('sota_id') 
-    ? localStorage.getItem('sota_id')
+const id = localStorage && localStorage.getItem('sota_id_') 
+    ? localStorage.getItem('sota_id_')
     : guid()
-const name = localStorage && localStorage.getItem('sota_name')
-    ? localStorage.getItem('sota_name')
+const name = localStorage && localStorage.getItem('sota_name_')
+    ? localStorage.getItem('sota_name_')
     : (() => {
         while (true) {
             const name = prompt('What is your name?')
@@ -37,8 +37,8 @@ const name = localStorage && localStorage.getItem('sota_name')
         }
     })()
 
-localStorage.setItem('sota_id', id)
-localStorage.setItem('sota_name', name)
+localStorage.setItem('sota_id_', id)
+localStorage.setItem('sota_name_', name)
 
 const characters = {}
 const texts = []
