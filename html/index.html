@@ -94,7 +94,11 @@ const poll = () => {
         poll()
     })
 }
-poll()
+(() => {
+    act({})
+        .then(_ => act({action: 'name', value: name}))
+        .then(_ => poll())
+})()
 
 const tick = (delta) => {
     draw.rect(0, 0, $screen.width, $screen.height, '#888888')
