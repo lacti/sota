@@ -11,12 +11,32 @@ queueConnection.on('error', function(e) {
     console.log("Error from amqp: ", e);
 })
 
-const dispatch = (msg, res) => {
+const contexts = {}
+const dispatch = (id, msg, res) => {
     console.log(`Dispatch all things in there. Now, message is [${JSON.stringify(msg)}]`)
-    res({nothing: 'can be'})
+    if (msg.action === 'name') {
+        console.log(`Update user[${id}]'s name to [${msg.value}]`)
+        db(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify({name: msg.value})])
+            .then(dbr => res({status: 'ok'}))
+
+    } else if (msg.action === 'chat') {
+        console.log(`User[${id}] sends a chat message[${msg.value}]`)
+        for (const ctx of contexts) {
+            ctx.postbox.push({ id: id, text: msg.value })
+        }
+        res({status: 'ok'})
+
+    } else if (msg.action === 'poll') {
+        const postbox = contexts[id].postbox
+        contexts[id].postbox = []
+        console.log(`User[${id}] polls messages[${JSON.stringify(postbox)}] from zhis postbox`)
+        res({messages: postbox})
+
+    } else {
+        res({status: 'unknown'})
+    }
 }
 
-const queues = []
 queueConnection.on('ready', () => {
     console.log('Q connection is ready. I\'ll create post, pull and notify xchgs.')
     let postExchange = queueConnection.exchange('post', queueOptions)
@@ -30,11 +50,14 @@ queueConnection.on('ready', () => {
         console.log(`Spawn a Q[${queueId}] and initialize it.`)
         queueConnection.queue(queueId, queueOptions, (queue) => {
             queue.bind('post', queueId)
-            queues[queueId] = queue
+            contexts[queueId] = {
+                queue: queue,
+                postbox: []
+            }
             console.log(`Q[${queueId}] is registered to global map and will be subscribed soon.`)
             queue.subscribe(input => {
                 console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
-                dispatch(input, (output) => {
+                dispatch(queueId, input, (output) => {
                     const responseMessage = Object.assign({_: input._}, output)
                     pullExchange.publish('response', responseMessage)
                     console.log(`Input=[${JSON.stringify(input)}] and Output=[${JSON.stringify(output)}] via Q[${queueId}].`)
@@ -44,10 +67,10 @@ queueConnection.on('ready', () => {
     }
     const despawnQueue = (queueId) => {
         console.log(`Despawn a Q[${queueId}] and destroy it.`)
-        const queueToDestroy = queues[workMessage.id]
-        if (queueToDestroy) {
-            delete queues[workMessage.id]
-            queueToDestroy.destroy()
+        const ctx = contexts[workMessage.id]
+        if (ctx) {
+            delete contexts[workMessage.id]
+            ctx.queue.destroy()
         }
     }
 
