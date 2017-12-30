@@ -59,7 +59,9 @@ queueConnection.on('ready', () => {
             queue.subscribe(input => {
                 console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
                 db.queryOne(`SELECT * FROM user WHERE user_id = ?`, [queueId]).then(dbr => {
-                    const user = Object.assign({id: queueId}, JSON.parse(dbr.context))
+                    const user = dbr
+                        ? Object.assign({id: queueId}, JSON.parse(dbr.context))
+                        : {id: queueId}
                     console.log(`Fetch user[${user}] with queueId[${queueId}].`)
                     dispatch(user, input, (output) => {
                         const responseMessage = Object.assign({_: input._}, output)
