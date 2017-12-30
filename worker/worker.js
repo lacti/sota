@@ -66,9 +66,9 @@ queueConnection.on('ready', () => {
     })
 
     console.log(`Read Q list from mysql.`)
-    db.query(`SELECT queue_id FROM queue`).then(ids => {
-        for (const queueId of ids) {
-            spawnQueue(queueId)
+    db.query(`SELECT queue_id FROM queue`).then(tuples => {
+        for (const tuple of tuples) {
+            spawnQueue(tuple.queue_id)
         }
     })
     console.log('All about queues are ready.')
