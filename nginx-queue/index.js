@@ -69,6 +69,7 @@ app.post('/', (req, res) => {
                 delete messages[messageId]
 
                 console.log(`I'll send a message[${JSON.stringify(msg)}] as a response of [${messageId}].`)
+                delete msg['_']
                 res.json(msg)
             })
 
@@ -78,7 +79,7 @@ app.post('/', (req, res) => {
                 queue.bind('post', queueId);
                 console.log(`Q[${queueId}] is binded with post xchg completed.`)
 
-                const workMessage = {acion: 'spawn', id: queueId}
+                const workMessage = {action: 'spawn', id: queueId}
                 notifyExchange.publish('work', workMessage)
                 console.log(`Notify the fact[${JSON.stringify(workMessage)}] to other workers.`)
             })

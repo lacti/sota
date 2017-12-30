@@ -1,8 +1,8 @@
 {
-  "name": "nginx-queue",
+  "name": "worker",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "worker.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,8 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "amqp": "^0.2.6",
-    "body-parser": "^1.18.2",
-    "express": "^4.16.2",
     "mysql": "^2.15.0",
     "uuid": "^3.1.0"
   }

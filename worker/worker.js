@@ -18,11 +18,10 @@ const dispatch = (msg, res) => {
 const queues = []
 queueConnection.on('ready', () => {
     console.log('Q connection is ready. I\'ll create post, pull and notify xchgs.')
+    let postExchange = queueConnection.exchange('post')
     let pullExchange = queueConnection.exchange('pull')
-    let _pullQueue = null
     queueConnection.queue('response', (queue) => {
         queue.bind('pull', 'response')
-        _pullQueue = queue
         console.log('Response Q and pull xchg is initialize successfully.')
     })
     let notifyExchange = queueConnection.exchange('notify')
@@ -42,7 +41,7 @@ queueConnection.on('ready', () => {
                         console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
                         dispatch(input, (output) => {
                             const responseMessage = Object.assign({_: input._}, output)
-                            _pullQueue.publish('response', responseMessage)
+                            pullExchange.publish('response', responseMessage)
                             console.log(`Input=[${JSON.stringify(input)}] and Output=[${JSON.stringify(output)}] via Q[${queueId}].`)
                         })
                     })
