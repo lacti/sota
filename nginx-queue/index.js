@@ -15,11 +15,12 @@ queueConnection.on('error', function(e) {
 
 const messages = {}
 let postExchange = null
-let pullExchange = null
+let notifyExchange = null
 queueConnection.on('ready', () => {
     console.log('Q connection is ready. I\'ll create post and pull xchgs.')
     postExchange = queueConnection.exchange('post')
-    pullExchange = queueConnection.exchange('pull')
+
+    let pullExchange = queueConnection.exchange('pull')
     queueConnection.queue('response', (queue) => {
         queue.bind('pull', 'response')
         console.log('Response Q and pull xchg is initialize successfully.');
@@ -27,6 +28,10 @@ queueConnection.on('ready', () => {
             console.log(`Receive message[${JSON.stringify(message)}] from response queue via pull xchg.`)
             messages[message._](message)
         })
+    })
+    notifyExchange = queueConnection.exchange('notify')
+    queueConnection.queue('work', (queue) => {
+        queue.bind('notify', 'work')
     })
 })
 
