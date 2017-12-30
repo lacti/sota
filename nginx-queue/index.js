@@ -17,13 +17,13 @@ const messages = {}
 let postExchange = null
 let notifyExchange = null
 queueConnection.on('ready', () => {
-    console.log('Q connection is ready. I\'ll create post and pull xchgs.')
+    console.log('Q connection is ready. I\'ll create post, pull and notify xchgs.')
     postExchange = queueConnection.exchange('post')
 
     let pullExchange = queueConnection.exchange('pull')
     queueConnection.queue('response', (queue) => {
         queue.bind('pull', 'response')
-        console.log('Response Q and pull xchg is initialize successfully.');
+        console.log('Response Q and pull xchg is initialize successfully.')
         queue.subscribe(message => {
             console.log(`Receive message[${JSON.stringify(message)}] from response queue via pull xchg.`)
             messages[message._](message)
@@ -32,6 +32,7 @@ queueConnection.on('ready', () => {
     notifyExchange = queueConnection.exchange('notify')
     queueConnection.queue('work', (queue) => {
         queue.bind('notify', 'work')
+        console.log('Work Q and notify xchg is initialize successfully.')
     })
 })
 
@@ -76,6 +77,10 @@ app.post('/', (req, res) => {
             queueConnection.queue(queueId, (queue) => {
                 queue.bind('post', queueId);
                 console.log(`Q[${queueId}] is binded with post xchg completed.`)
+
+                const workMessage = {acion: 'spawn', id: queueId}
+                notifyExchange.publish('work', workMessage)
+                console.log(`Notify the fact[${JSON.stringify(workMessage)}] to other workers.`)
             })
             res.json({status: 'ok'})
         }
