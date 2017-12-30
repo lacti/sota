@@ -172,7 +172,7 @@ const tick = (delta) => {
     for (const character of Object.values(characters)) {
         console.log(character)
         draw.image($player1, character.x, character.y)
-        draw.text(character.name, character.x + (64 - character.name * 18) / 2, character.y - 8, 18, '#00ffff')
+        draw.text(character.name, character.x + (64 - character.name.length * 18) / 2, character.y - 8, 18, '#00ffff')
     }
 
     let textY = 0
