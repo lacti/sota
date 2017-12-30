@@ -1,1 +1,91 @@
-yyt #5
+<html><head><title>sota</title>
+</head>
+<style type="text/css">
+* {
+    font-size: 1.2em;
+}
+html, body {
+    margin: 0; padding: 0px; width: 100%; height: 100%; overflow: hidden;
+}
+#command {
+    width: 100%; position: absolute; bottom: 0px; left: 0px;
+}
+</style>
+<body>
+    <canvas id="screen"></canvas>
+    <input id="command" type="text" />
+
+
+<script type="text/javascript">
+const elements = []
+const texts = []
+
+const $window = window
+const $command = document.getElementById('command')
+const $screen = document.getElementById('screen')
+$command.focus()
+$command.addEventListener('keypress', e => {
+    if ('Enter' === e.key) {
+        texts.push({
+            alive: 0,
+            value: $command.value
+        })
+        $command.value = ''
+    }
+})
+
+const fitSize = () => { 
+    $screen.width = $window.innerWidth
+    $screen.height = $window.innerHeight
+}
+fitSize()
+$window.addEventListener('resize', fitSize);
+
+const $ctx = $screen.getContext('2d')
+const draw = {
+    rect: (x, y, w, h, color) => {
+        $ctx.fillStyle = color
+        $ctx.fillRect(x, y, w, h, color)
+    },
+    text: (text, x, y, size, color) => {
+        $ctx.font = size + 'px Serif'
+        $ctx.fillStyle = color
+        $ctx.fillText(text, x, y + size)        
+    }
+}
+
+const tick = (delta) => {
+    draw.rect(0, 0, $screen.width, $screen.height, '#888888')
+    for (const element of elements) {
+    }
+
+    let textY = 0
+    for (const text of texts) {
+        draw.text(text.value, 0, textY, 24, '#ffffff')
+        text.alive += delta
+        textY += 24
+    }
+    while (texts.length > 0) {
+        /*
+        if (texts[0].alive > 5000) {
+            texts.pop()
+        }
+        */
+    }
+}
+
+const loop = () => {
+    let before = 0
+    const iterator = (now) => {
+        const delta = now - (before || now)
+        tick(delta)
+        before = now
+        // $window.requestAnimationFrame(iterator)
+        $window.setTimeout(iterator, 1000)
+    }
+    iterator(0)
+}
+loop()
+</script>
+</body>
+</html>
