@@ -23,7 +23,7 @@ const dispatch = (user, msg, res) => {
     } else if (msg.action === 'chat') {
         console.log(`User[${id}] sends a chat message[${msg.value}]`)
         for (const ctx of Object.values(contexts)) {
-            ctx.postbox.push({ id: id, name: user.name, text: msg.value })
+            ctx.postbox.push({ id: id, type: 'chat', name: user.name, text: msg.value })
         }
         res({status: 'ok'})
 

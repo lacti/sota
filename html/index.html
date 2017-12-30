@@ -90,6 +90,15 @@ const poll = () => {
     }).then(resp => {
         for (const msg of resp.messages) {
             console.log(msg)
+            if (!msg.type) {
+                continue;
+            }
+            if (msg.type === 'chat') {
+                texts.push({
+                    alive: 0,
+                    value: `[${msg.name}] ${msg.value}`
+                })
+            }
         }
         poll()
     })
