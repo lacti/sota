@@ -127,6 +127,9 @@ const draw = {
         $ctx.fillText(text, x, y + size)
     },
     image: ($img, x, y) => {
+               if (!$img || !$img.width || !$img.height) {
+               return
+               }
         $ctx.drawImage($img, 0, 0, $img.width, $img.height, x, y, $img.width, $img.height)
     }
 }
