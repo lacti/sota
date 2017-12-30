@@ -40,7 +40,7 @@ const name = localStorage && localStorage.getItem('sota_name')
 localStorage.setItem('sota_id', id)
 localStorage.setItem('sota_name', name)
 
-const elements = []
+const characters = {}
 const texts = []
 const postQ = []
 
@@ -127,9 +127,9 @@ const draw = {
         $ctx.fillText(text, x, y + size)
     },
     image: ($img, x, y) => {
-               if (!$img || !$img.width || !$img.height) {
-               return
-               }
+        if (!$img || !$img.width || !$img.height) {
+            return
+        }
         $ctx.drawImage($img, 0, 0, $img.width, $img.height, x, y, $img.width, $img.height)
     }
 }
@@ -150,11 +150,7 @@ const poll = () => {
                 })
             }
             else if (msg.type === 'char') {
-                elements.push({
-                    x: msg.x,
-                    y: msg.y,
-                    name: msg.name
-                })
+                characters[msg.id] = msg
             }
         }
         setTimeout(poll, 100)
@@ -173,9 +169,10 @@ const tick = (delta) => {
     draw.rect(0, 0, $screen.width, $screen.height, '#888888')
     draw.image($glass1, 0, 0)
     draw.image($glass1, $glass1.width, 0)
-    for (const element of elements) {
-        draw.text(element.name, element.x, element.y, '#00ffff')
-        draw.image($player1, element.x, element.y)
+    for (const character of Object.values(characters)) {
+        console.log(character)
+        draw.text(character.name, character.x, character.y, '#00ffff')
+        draw.image($player1, character.x, character.y)
     }
 
     let textY = 0
