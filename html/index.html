@@ -139,7 +139,6 @@ const poll = () => {
         action: 'poll'
     }).then(resp => {
         for (const msg of resp.messages) {
-            console.log(msg)
             if (!msg.type) {
                 continue;
             }
@@ -170,7 +169,6 @@ const tick = (delta) => {
     draw.image($glass1, 0, 0)
     draw.image($glass1, $glass1.width, 0)
     for (const character of Object.values(characters)) {
-        console.log(character)
         draw.image($player1, character.x, character.y)
         draw.text(character.name, character.x + (64 - character.name.length * 18) / 2, character.y - 8, 18, '#000000')
     }
