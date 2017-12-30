@@ -25,7 +25,8 @@ const $command = document.getElementById('command')
 const $screen = document.getElementById('screen')
 $command.focus()
 $command.addEventListener('keypress', e => {
-    if ('Enter' === e.key) {
+    const text = $command.value
+    if ('Enter' === e.key && text !== '') {
         texts.push({
             alive: 0,
             value: $command.value
@@ -66,11 +67,9 @@ const tick = (delta) => {
         textY += 24
     }
     while (texts.length > 0) {
-        /*
-        if (texts[0].alive > 5000) {
-            texts.pop()
-        }
-        */
+        if (texts[0].alive > 10 * 1000) {
+            texts.shift()
+        } else break;
     }
 }
 
@@ -80,8 +79,12 @@ const loop = () => {
         const delta = now - (before || now)
         tick(delta)
         before = now
-        // $window.requestAnimationFrame(iterator)
-        $window.setTimeout(iterator, 1000)
+        $window.requestAnimationFrame(iterator)
+        /*
+        $window.setTimeout(() => {
+            iterator(new Date().getTime())
+        }, 1000)
+        */
     }
     iterator(0)
 }
