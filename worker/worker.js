@@ -4,6 +4,7 @@ const amqp = require('amqp')
 const uuidv4 = require('uuid/v4')
 
 const queueConnection = amqp.createConnection({ host: 'localhost' })
+const queueOptions = {autoDelete: false, durable: true}
 const db = require('./db')
 
 queueConnection.on('error', function(e) {
@@ -18,16 +19,16 @@ const dispatch = (msg, res) => {
 const queues = []
 queueConnection.on('ready', () => {
     console.log('Q connection is ready. I\'ll create post, pull and notify xchgs.')
-    let postExchange = queueConnection.exchange('post')
-    let pullExchange = queueConnection.exchange('pull')
-    queueConnection.queue('response', (queue) => {
+    let postExchange = queueConnection.exchange('post', queueOptions)
+    let pullExchange = queueConnection.exchange('pull', queueOptions)
+    queueConnection.queue('response', queueOptions, (queue) => {
         queue.bind('pull', 'response')
         console.log('Response Q and pull xchg is initialize successfully.')
     })
 
     const spawnQueue = (queueId) => {
         console.log(`Spawn a Q[${queueId}] and initialize it.`)
-        queueConnection.queue(queueId, (queue) => {
+        queueConnection.queue(queueId, queueOptions, (queue) => {
             queue.bind('post', queueId)
             queues[queueId] = queue
             console.log(`Q[${queueId}] is registered to global map and will be subscribed soon.`)
@@ -50,8 +51,8 @@ queueConnection.on('ready', () => {
         }
     }
 
-    let notifyExchange = queueConnection.exchange('notify')
-    queueConnection.queue('work', (workQueue) => {
+    let notifyExchange = queueConnection.exchange('notify', queueOptions)
+    queueConnection.queue('work', queueOptions, (workQueue) => {
         workQueue.bind('notify', 'work')
         console.log('Work Q and notify xchg is initialize successfully.')
         workQueue.subscribe(workMessage => {

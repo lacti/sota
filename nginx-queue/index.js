@@ -7,6 +7,7 @@ const amqp = require('amqp')
 const uuidv4 = require('uuid/v4')
 
 const queueConnection = amqp.createConnection({ host: 'localhost' })
+const queueOptions = {autoDelete: false, durable: true}
 const db = require('./db')
 
 queueConnection.on('error', function(e) {
@@ -18,10 +19,10 @@ let postExchange = null
 let notifyExchange = null
 queueConnection.on('ready', () => {
     console.log('Q connection is ready. I\'ll create post, pull and notify xchgs.')
-    postExchange = queueConnection.exchange('post')
+    postExchange = queueConnection.exchange('post', queueOptions)
 
-    let pullExchange = queueConnection.exchange('pull')
-    queueConnection.queue('response', (queue) => {
+    let pullExchange = queueConnection.exchange('pull', queueOptions)
+    queueConnection.queue('response', queueOptions, (queue) => {
         queue.bind('pull', 'response')
         console.log('Response Q and pull xchg is initialize successfully.')
         queue.subscribe(message => {
@@ -29,8 +30,8 @@ queueConnection.on('ready', () => {
             messages[message._](message)
         })
     })
-    notifyExchange = queueConnection.exchange('notify')
-    queueConnection.queue('work', (queue) => {
+    notifyExchange = queueConnection.exchange('notify', queueOptions)
+    queueConnection.queue('work', queueOptions, (queue) => {
         queue.bind('notify', 'work')
         console.log('Work Q and notify xchg is initialize successfully.')
     })
@@ -75,7 +76,7 @@ app.post('/', (req, res) => {
 
         } else {
             console.log(`There is no action, so I just declare a Q[${queueId}].`)
-            queueConnection.queue(queueId, (queue) => {
+            queueConnection.queue(queueId, queueOptions, (queue) => {
                 queue.bind('post', queueId);
                 console.log(`Q[${queueId}] is binded with post xchg completed.`)
 
