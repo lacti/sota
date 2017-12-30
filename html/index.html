@@ -68,8 +68,8 @@ $command.addEventListener('keypress', e => {
     const text = ($command.value || '').trim()
     if ('Enter' === e.key && text) {
         if ('@reset' === text) {
-            localStorage.removeItem('sota_id')
-            localStorage.removeItem('sota_name')
+            localStorage.removeItem('sota_id_')
+            localStorage.removeItem('sota_name_')
             location.reload()
         } else {
             act({
