@@ -58,7 +58,8 @@ queueConnection.on('ready', () => {
             console.log(`Q[${queueId}] is registered to global map and will be subscribed soon.`)
             queue.subscribe(input => {
                 console.log(`A message[${JSON.stringify(input)}] is received from Q[${queueId}].`)
-                db.queryOne(`SELECT * FROM user WHERE user_id = ?`, [queueId]).then(user => {
+                db.queryOne(`SELECT * FROM user WHERE user_id = ?`, [queueId]).then(dbr => {
+                    const user = Object.assign({id: queueId}, JSON.parse(dbr.context))
                     console.log(`Fetch user[${user}] with queueId[${queueId}].`)
                     dispatch(user, input, (output) => {
                         const responseMessage = Object.assign({_: input._}, output)
