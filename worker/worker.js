@@ -16,12 +16,12 @@ const dispatch = (id, msg, res) => {
     console.log(`Dispatch all things in there. Now, message is [${JSON.stringify(msg)}]`)
     if (msg.action === 'name') {
         console.log(`Update user[${id}]'s name to [${msg.value}]`)
-        db(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify({name: msg.value})])
+        db.query(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify({name: msg.value})])
             .then(dbr => res({status: 'ok'}))
 
     } else if (msg.action === 'chat') {
         console.log(`User[${id}] sends a chat message[${msg.value}]`)
-        for (const ctx of contexts) {
+        for (const ctx of Object.values(contexts)) {
             ctx.postbox.push({ id: id, text: msg.value })
         }
         res({status: 'ok'})
