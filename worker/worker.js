@@ -19,8 +19,8 @@ const dispatch = (user, msg, res) => {
         console.log(`Update user[${id}]'s name to [${msg.value}]`)
         const character = {
             name: msg.value,
-            x: int(Math.random() * 100),
-            y: int(Math.random() * 100),
+            x: Math.floor(Math.random() * 100),
+            y: Math.floor(Math.random() * 100),
         }
         db.query(`REPLACE INTO user (user_id, context) VALUES (?, ?)`, [id, JSON.stringify(character)])
             .then(dbr => res({status: 'ok'}))
@@ -41,8 +41,8 @@ const dispatch = (user, msg, res) => {
             ? user
             : {
                 name: msg.value,
-                x: int(Math.random() * 100),
-                y: int(Math.random() * 100),
+                x: Math.floor(Math.random() * 100),
+                y: Math.floor(Math.random() * 100),
             }
         if ('up' === msg.value) {
             character.y -= 4
